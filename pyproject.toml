@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "ise-533-hw1"
+version = "0.1.0"
+description = ""
+authors = ["Adhithya Bhaskar <adhithyabhaskar@gmail.com>"]
+readme = "README.md"
+packages = [{include = "ise_533_hw1"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyomo = "^6.4.4"
+jupyterlab = "^3.5.2"
+ipykernel = "^6.20.1"
+pandas = "^1.5.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
