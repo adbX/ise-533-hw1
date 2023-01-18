@@ -7,14 +7,14 @@ class pyomo_model:
     def __init__(self, data_path: Path, year: int):
         self.data_path = data_path
         self.year = year
-        self.adj_list = dat.create_adj_list(data_path)
-        self.adj_matrix = dat.gen_adj_matrix(self.adj_list)
+        self.adjacent_list = dat.create_adjacent_list(data_path)
+        self.adjacent_matrix = dat.gen_adjacent_matrix(self.adjacent_list)
         self.df_init, self.counties = dat.data_ingest(data_path, year)
-        self.df = dat.create_df(self.df_init, self.counties, self.adj_list)
+        self.df = dat.create_df(self.df_init, self.counties, self.adjacent_list)
         self.model = pyo.AbstractModel()
     
-    def param_adj(self, m, i, j):
-        return int(j in self.adj_matrix[i])
+    def param_adjacent(self, m, i, j):
+        return int(j in self.adjacent_matrix[i])
     
     def param_pop(self, m, i):
         return self.df["population"][i - 1]
@@ -41,8 +41,8 @@ class pyomo_model:
 
         self.model.p = pyo.Param(self.model.I, initialize=self.param_pop)  # population of county i
 
-        # self.model.a = pyo.Set(self.model.I, self.model.J, within=pyo.Binary, initialize=self.param_adj)  # 1 if county i and j are adjacent
-        self.model.a = pyo.Var(self.model.I, self.model.J, domain=pyo.Binary, initialize=self.param_adj)  # 1 if county i and j are adjacent
+        # self.model.a = pyo.Set(self.model.I, self.model.J, within=pyo.Binary, initialize=self.param_adjacent)  # 1 if county i and j are adjacent
+        self.model.a = pyo.Var(self.model.I, self.model.J, domain=pyo.Binary, initialize=self.param_adjacent)  # 1 if county i and j are adjacent
 
         self.model.x = pyo.Var(self.model.J, domain=pyo.Binary)  # 1 if principal place of business is opened in county j
         self.model.y = pyo.Var(self.model.I, domain=pyo.Binary)  # 1 if county i is covered
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     # solution.solutions.store_to(results)
 
 
-# def param_adj(m, i, j):
-#     return int(j in adj_matrix[i])
+# def param_adjacent(m, i, j):
+#     return int(j in adjacent_matrix[i])
 
 # def param_pop(m, i):
 #     return df["population"][i - 1]

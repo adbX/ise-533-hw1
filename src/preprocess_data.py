@@ -8,11 +8,12 @@ def county_list_to_names(id_list: list, counties: pd.DataFrame) -> list:
     return counties[counties["county_id"].isin(id_list)]["county"].tolist()
 
 
-def gen_adj_matrix(adj_list: list) -> dict:
-    adj_matrix = defaultdict(list)
+def gen_adjacent_matrix(adjacent_list: list) -> dict:
+    adjacent_matrix = defaultdict(list)
     for i in range(1, 89):
-        adj_matrix[i] = adj_list[i - 1]
-    return adj_matrix
+        adjacent_list[i - 1].append(i)
+        adjacent_matrix[i] = adjacent_list[i - 1]
+    return adjacent_matrix
 
 
 def data_ingest(data_path: Path, year: int):
@@ -25,19 +26,19 @@ def data_ingest(data_path: Path, year: int):
     return df, counties
 
 
-def create_adj_list(data_path: Path) -> list:
-    with open(data_path / "oh_adj_loc.dat", "r") as f:
-        read_adj = f.readlines()
+def create_adjacent_list(data_path: Path) -> list:
+    with open(data_path / "oh_adjacent_loc.dat", "r") as f:
+        read_adjacent = f.readlines()
 
-    adj_sublist = list(map(lambda x: x.strip("\n").split(","), read_adj))
-    adj_list = [[int(x) for x in sublst] for sublst in adj_sublist]
+    adjacent_sublist = list(map(lambda x: x.strip("\n").split(","), read_adjacent))
+    adjacent_list = [[int(x) for x in sublst] for sublst in adjacent_sublist]
 
-    return adj_list
+    return adjacent_list
 
 
-def create_df(df: pd.DataFrame, counties: pd.DataFrame, adj_list: list) -> pd.DataFrame:
-    df = pd.concat([df, pd.Series(adj_list, name="adj_id")], axis=1)
-    df["adj_names"] = df["adj_id"].apply(lambda x: county_list_to_names(x, counties))
+def create_df(df: pd.DataFrame, counties: pd.DataFrame, adjacent_list: list) -> pd.DataFrame:
+    df = pd.concat([df, pd.Series(adjacent_list, name="adjacent_id")], axis=1)
+    df["adjacent_names"] = df["adjacent_id"].apply(lambda x: county_list_to_names(x, counties))
 
     return df
 
@@ -46,10 +47,10 @@ if __name__ == "__main__":
     data_path = Path("data")
     year = 2021
 
-    adj_list = create_adj_list(data_path)
-    adj_matrix = gen_adj_matrix(adj_list)
+    adjacent_list = create_adjacent_list(data_path)
+    adjacent_matrix = gen_adjacent_matrix(adjacent_list)
     df_init, counties = data_ingest(data_path, year)
-    df = create_df(df_init, counties, adj_list)
+    df = create_df(df_init, counties, adjacent_list)
 
-    print(adj_matrix)
+    print(adjacent_matrix)
     print(df.head())
