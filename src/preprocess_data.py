@@ -36,9 +36,13 @@ def create_adjacent_list(data_path: Path) -> list:
     return adjacent_list
 
 
-def create_df(df: pd.DataFrame, counties: pd.DataFrame, adjacent_list: list) -> pd.DataFrame:
+def create_df(
+    df: pd.DataFrame, counties: pd.DataFrame, adjacent_list: list
+) -> pd.DataFrame:
     df = pd.concat([df, pd.Series(adjacent_list, name="adjacent_id")], axis=1)
-    df["adjacent_names"] = df["adjacent_id"].apply(lambda x: county_list_to_names(x, counties))
+    df["adjacent_names"] = df["adjacent_id"].apply(
+        lambda x: county_list_to_names(x, counties)
+    )
 
     return df
 
