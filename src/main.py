@@ -30,14 +30,14 @@ class pyomo_model:
     
     def define_model(self):
         # value of n (number of counties)
-        self.model.n = pyo.Param(initialize=88)
+        self.model.n = 88
+        
+        # TOSET limit on number of pirincipal places of buisnesses opened (init to 5)
+        self.model.k = 5
 
         # range of i and j (iterating over counties)
         self.model.I = pyo.RangeSet(1, self.model.n)
         self.model.J = pyo.RangeSet(1, self.model.n)
-
-        # TOSET limit on number of pirincipal places of buisnesses opened (init to 5)
-        self.model.k = pyo.Var(within=pyo.NonNegativeIntegers, initialize=5)
 
         self.model.p = pyo.Param(self.model.I, initialize=self.param_pop)  # population of county i
 
@@ -49,7 +49,7 @@ class pyomo_model:
 
         self.model.obj = pyo.Objective(rule=self.obj_sum, sense=pyo.maximize)
 
-        self.model.a_constraint = pyo.Constraint(self.model.I, rule=self.con_a)
+        # self.model.a_constraint = pyo.Constraint(self.model.I, rule=self.con_a)
         self.model.x_constraint = pyo.Constraint(rule=self.con_x)
 
     def create_instance(self):
@@ -64,7 +64,7 @@ class pyomo_model:
         
     def print_data(self):
         # print(self.df.head())
-        print (self.instance.y.display())
+        print (self.instance.x.display())
 
 if __name__ == "__main__":
     model21 = pyomo_model(Path("data"), 2021)
