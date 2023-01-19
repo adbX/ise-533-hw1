@@ -6,8 +6,7 @@ from collections import defaultdict
 
 def county_list_to_names(id_list: list, counties: pd.DataFrame) -> list:
     return counties[counties["county_id"].isin(id_list)]["county"].tolist()
-
-
+    
 def gen_adjacent_matrix(adjacent_list: list) -> dict:
     adjacent_matrix = defaultdict(list)
     for i in range(1, 89):
@@ -17,12 +16,13 @@ def gen_adjacent_matrix(adjacent_list: list) -> dict:
 
 
 def data_ingest(data_path: Path, year: int):
+    fips_df = pd.read_csv(data_path / "oh-fips.csv")
     counties = pd.read_csv(data_path / "oh_county_list.csv")
     counties["county_id"] = pd.Series(range(1, 89))
 
     df_pop = pd.read_csv(data_path / f"oh_county_pop_{str(year)}.csv")
     df = pd.merge(counties, df_pop, on="county")
-
+    df = pd.merge(df, fips_df, on="county")
     return df, counties
 
 
@@ -46,6 +46,12 @@ def create_df(
 
     return df
 
+def get_df_adj(data_path: Path, year: int):
+    adjacent_list = create_adjacent_list(data_path)
+    adjacent_matrix = gen_adjacent_matrix(adjacent_list)
+    df_init, counties = data_ingest(data_path, year)
+    df = create_df(df_init, counties, adjacent_list)
+    return df, adjacent_matrix
 
 if __name__ == "__main__":
     data_path = Path("data")
@@ -56,5 +62,5 @@ if __name__ == "__main__":
     df_init, counties = data_ingest(data_path, year)
     df = create_df(df_init, counties, adjacent_list)
 
-    print(adjacent_matrix)
+    # print(adjacent_matrix)
     print(df.head())
