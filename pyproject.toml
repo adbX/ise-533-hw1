@@ -21,6 +21,9 @@ plotly-geo = "^1.0.0"
 folium = "^0.14.0"
 matplotlib = "^3.6.3"
 bokeh = "^3.0.3"
+dash = "^2.7.1"
+jupyter-dash = "^0.4.2"
+streamlit = "^1.17.0"
 
 
 [build-system]
