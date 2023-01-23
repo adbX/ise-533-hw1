@@ -19,13 +19,16 @@ def gen_adjacent_matrix(adjacent_list: list) -> dict:
 def data_ingest(data_path: Path, year: int):
     fips_df = pd.read_csv(data_path / "oh-fips.csv")
     fips_df.astype({"fips": "int"})
+    
     counties = pd.read_csv(data_path / "oh_county_list.csv")
+    camm_id = pd.read_csv(data_path / "camm_county_mapping.csv")
     counties["county_id"] = pd.Series(range(1, 89))
 
     df_pop = pd.read_csv(data_path / f"oh_county_pop_{str(year)}.csv")
     df_pop.astype({"population": "int"})
     df = pd.merge(counties, df_pop, on="county")
     df = pd.merge(df, fips_df, on="county")
+    df = pd.merge(df, camm_id, on="county_id")
     return df, counties
 
 
@@ -68,4 +71,4 @@ if __name__ == "__main__":
     df = create_df(df_init, counties, adjacent_list)
 
     # print(adjacent_matrix)
-    print(df.head())
+    # print(df[['camm_id', 'county_id']])

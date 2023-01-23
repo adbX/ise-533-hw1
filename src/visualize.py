@@ -19,31 +19,43 @@ geodata = gpd.read_file(data_path / "us_counties.geojson")
 geodata.id = geodata.id.astype(str).astype(int)
 geodata_ohio = geodata[geodata.id.isin(df.fips)]
 
+color_blank = px.colors.qualitative.Pastel[1]
+color_neighbour = px.colors.qualitative.Pastel[0]
+color_selected = px.colors.qualitative.Pastel[2]
+custom_color_map = {
+    'blank': color_blank,
+    'neighbour': color_neighbour,
+    'selected': color_selected
+}
+
 geo_df = pd.merge(
     left=gpd.GeoDataFrame.from_features(geodata_ohio),
     right=df,
     left_on="id",
     right_on="fips",
-).set_index("county_id")
-geo_df["colors"] = 0
+).set_index("county_id").assign(lat=lambda d: d.geometry.centroid.y, lon=lambda d: d.geometry.centroid.x)
+
+geo_df["colors"] = "blank"
+combined_id_camm = geo_df.index.astype(str) + ": " + geo_df["NAME"]
+combined_id_official = geo_df["camm_id"].astype(str) + ": " + geo_df["NAME"]
 
 def get_neighbours(selection, geo_df=geo_df, adjacent_matrix=adjacent_matrix):
     if selection is None:
         return None
     else:
         selection_df = geo_df.loc[adjacent_matrix[selection]]
-        selection_df["colors"] = 1
-        selection_df.loc[selection, "colors"] = 3
+        selection_df["colors"] = "neighbour"
+        selection_df.loc[selection, "colors"] = "selected"
         return selection_df
 
 
 def get_figure(fig, hover):
-    if hover != -1:
+    if hover != -1 and hover is not None:
         highlights = get_neighbours(hover)
         
         print_hi = highlights["NAME"].values.tolist()
         print(f"Highlighting for {hover} : {print_hi}")
-
+        # print(f"latitude: = {highlights['lat']}")
         fig.add_trace(
             px.choropleth(
                 highlights,
@@ -51,21 +63,22 @@ def get_figure(fig, hover):
                 color=highlights.colors,
                 hover_name=highlights.NAME,
                 locations=highlights.index,
+                color_discrete_map=custom_color_map
             ).data[0]
         )
-    # fig.update_geos(fitbounds="locations", visible=False)
-    # fig.update_layout(
-    #     margin={"r": 0, "t": 0, "l": 0, "b": 0}, 
-    #     uirevision="constant",
-    #     showlegend=False
-    # )
     return fig
-
 
 app = dash.Dash(__name__)
 
 app.layout = html.Div(
     [
+        html.P("Source of county_id label:"),
+        dcc.RadioItems(
+            id='county_id_select', 
+            options=["Camm2018", "Official"],
+            value="Camm2018",
+            inline=True
+        ),
         dcc.Graph(
             id="choropleth",
             responsive=True,
@@ -75,12 +88,11 @@ app.layout = html.Div(
 )
 
 @app.callback(Output("choropleth", "figure"),
-              [Input("choropleth", "hoverData")])
+              Input("choropleth", "hoverData"),
+              Input("county_id_select", "value"))
 
-def display_figure(hoverData):
-    # geo_df["colors"] = 0
-    # geo_df_json = geo_df.
-    # geo_df_json = geo_df.to_json()
+def display_figure(hoverData, county_id_select_value):
+    geo_df["colors"] = "blank"
     
     fig = px.choropleth(
         geo_df,
@@ -89,18 +101,22 @@ def display_figure(hoverData):
         hover_name=geo_df.NAME,
         locations=geo_df.index,
         labels={"neighbours": "adjacent_id"},
+        color_discrete_map=custom_color_map,
         template="seaborn",
     )
+
+    if county_id_select_value == "Camm2018":
+        combined_id = combined_id_camm
+    else:
+        combined_id = combined_id_official
+        
+    fig.add_trace(px.scatter_geo(geo_df,
+                    lat=geo_df.lat,
+                    lon=geo_df.lon,
+                    opacity=0,
+                    text=combined_id).data[0])
     
-    # fig.add_scattergeo(
-    #     geojson=geo_df_json,
-    #     locations=geo_df.index,
-    #     locationmode="geojson-id", 
-    #     text=geo_df.NAME,
-    #     mode='text',
-    # )
-    
-    fig.update_geos(fitbounds="locations")
+    fig.update_geos(fitbounds="locations", visible=False)
     fig.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0}, 
         uirevision="constant",
