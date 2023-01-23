@@ -33,7 +33,7 @@ def camm_ids_to_county_ids(df: pd.DataFrame, camm_ids: list) -> list:
     return sorted(county_list)
 
 def create_adjacent_list(data_path: Path) -> list:
-    with open(data_path / "oh_adjacent_loc_v2.dat", "r") as f:
+    with open(data_path / "oh_adjacent_loc.dat", "r") as f:
         read_adjacent = f.readlines()
 
     adjacent_sublist = list(map(lambda x: x.strip("\n").split(","), read_adjacent))
