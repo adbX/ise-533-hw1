@@ -10,7 +10,7 @@ from dash import dcc
 
 data_path = Path("data/")
 output_path = Path("output/")
-solution_name = "solution_model_1_static.csv"
+# solution_name = "solution_model_1_static.csv"
 
 df, adjacent_matrix = ppd.get_df_adj(data_path, 2021)
 
@@ -90,7 +90,13 @@ app.layout = html.Div(
             value="Official",
             inline=True
         ),
-        html.P(f"Highlighting solutions for {solution_name}:"),
+        dcc.RadioItems(
+            id='solution_select', 
+            options=["model_1_static", "model_2_population"],
+            value="model_1_static",
+            inline=True
+        ),
+        html.P(id='solutions_name'),
         html.P(id='solutions_county_id'),
         html.P(id='solutions_camm_id'),
         dcc.Graph(
@@ -105,11 +111,14 @@ app.layout = html.Div(
 @app.callback(Output("choropleth", "figure"),
               Output("solutions_county_id", "children"),
               Output("solutions_camm_id", "children"),
+              Output("solutions_name", "children"),
               Input("choropleth", "hoverData"),
-              Input("county_id_select", "value"))
+              Input("county_id_select", "value"),
+              Input("solution_select", "value"))
 
-def display_figure(hoverData, county_id_select):
+def display_figure(hoverData, county_id_select, solution_select):
     # get_solutions(df, solution_name)
+    solution_name = "solution_" + solution_select + ".csv"
     solutions, solutions_county_id, solutions_camm_id = get_solutions(df, solution_name)
     set_solution_colors(solutions)
     
@@ -150,9 +159,10 @@ def display_figure(hoverData, county_id_select):
 
     div_solutions_county_id = f"County IDs: {solutions_county_id}"
     div_solutions_camm_id = f"Camm IDs: {solutions_camm_id}"
+    div_solutions_name = f"Highlighting solutions for {solution_name}:"
 
     # print(f"Selected: {hover}")
-    return get_figure(fig, hover), div_solutions_county_id, div_solutions_camm_id
+    return get_figure(fig, hover), div_solutions_county_id, div_solutions_camm_id, div_solutions_name
 
 # app.run_server(mode='inline', port=8088, debug=True)
 app.run_server(debug=True, port=8088)
