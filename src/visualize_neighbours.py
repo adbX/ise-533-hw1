@@ -1,20 +1,19 @@
-from urllib.request import urlopen
-import json
 import plotly.express as px
 import geopandas as gpd
 from pathlib import Path
 import preprocess_data as ppd
 import pandas as pd
-from dash.dependencies import Input, Output, State
-import plotly.graph_objects as go
-from jupyter_dash import JupyterDash
 import dash
+from dash.dependencies import Input, Output
 from dash import html
 from dash import dcc
-import streamlit as st
 
 data_path = Path("data/")
+output_path = Path("output/")
+solution_name = "solution_model_1_static.csv"
+
 df, adjacent_matrix = ppd.get_df_adj(data_path, 2021)
+
 geodata = gpd.read_file(data_path / "us_counties.geojson")
 geodata.id = geodata.id.astype(str).astype(int)
 geodata_ohio = geodata[geodata.id.isin(df.fips)]
@@ -22,10 +21,12 @@ geodata_ohio = geodata[geodata.id.isin(df.fips)]
 color_blank = px.colors.qualitative.Pastel[1]
 color_neighbour = px.colors.qualitative.Pastel[0]
 color_selected = px.colors.qualitative.Pastel[2]
+color_solution = px.colors.qualitative.Pastel[3]
 custom_color_map = {
     'blank': color_blank,
     'neighbour': color_neighbour,
-    'selected': color_selected
+    'selected': color_selected,
+    'solution': color_solution
 }
 
 geo_df = pd.merge(
@@ -35,9 +36,15 @@ geo_df = pd.merge(
     right_on="fips",
 ).set_index("county_id").assign(lat=lambda d: d.geometry.centroid.y, lon=lambda d: d.geometry.centroid.x)
 
-geo_df["colors"] = "blank"
-combined_id_camm = geo_df.index.astype(str) + ": " + geo_df["NAME"]
-combined_id_official = geo_df["camm_id"].astype(str) + ": " + geo_df["NAME"]
+# geo_df["colors"] = "blank"
+combined_id_official = geo_df.index.astype(str) + ": " + geo_df["NAME"]
+combined_id_camm = geo_df["camm_id"].astype(str) + ": " + geo_df["NAME"]
+
+def get_solutions(df, solution_name):
+    solutions = pd.read_csv(output_path / solution_name)
+    solutions_county_id = solutions["county_id"].values.tolist()
+    solutions_camm_id = ppd.county_ids_to_camm_ids(df, solutions_county_id)
+    return solutions, solutions_county_id, solutions_camm_id
 
 def get_neighbours(selection, geo_df=geo_df, adjacent_matrix=adjacent_matrix):
     if selection is None:
@@ -48,6 +55,10 @@ def get_neighbours(selection, geo_df=geo_df, adjacent_matrix=adjacent_matrix):
         selection_df.loc[selection, "colors"] = "selected"
         return selection_df
 
+def set_solution_colors(solutions):
+    geo_df["colors"] = "blank"
+    geo_df.loc[geo_df.index.isin(solutions["county_id"]), "colors"] = "solution"
+    return geo_df
 
 def get_figure(fig, hover):
     if hover != -1 and hover is not None:
@@ -75,24 +86,32 @@ app.layout = html.Div(
         html.P("Source of county_id label:"),
         dcc.RadioItems(
             id='county_id_select', 
-            options=["Camm2018", "Official"],
-            value="Camm2018",
+            options=["Official", "Camm18"],
+            value="Official",
             inline=True
         ),
+        html.P(f"Highlighting solutions for {solution_name}:"),
+        html.P(id='solutions_county_id'),
+        html.P(id='solutions_camm_id'),
         dcc.Graph(
             id="choropleth",
             responsive=True,
             style={'width': '95vw', 'height': '95vh'},
+            clear_on_unhover=True,
         )
     ]
 )
 
 @app.callback(Output("choropleth", "figure"),
+              Output("solutions_county_id", "children"),
+              Output("solutions_camm_id", "children"),
               Input("choropleth", "hoverData"),
               Input("county_id_select", "value"))
 
-def display_figure(hoverData, county_id_select_value):
-    geo_df["colors"] = "blank"
+def display_figure(hoverData, county_id_select):
+    # get_solutions(df, solution_name)
+    solutions, solutions_county_id, solutions_camm_id = get_solutions(df, solution_name)
+    set_solution_colors(solutions)
     
     fig = px.choropleth(
         geo_df,
@@ -105,7 +124,7 @@ def display_figure(hoverData, county_id_select_value):
         template="seaborn",
     )
 
-    if county_id_select_value == "Camm2018":
+    if county_id_select == "Camm18":
         combined_id = combined_id_camm
     else:
         combined_id = combined_id_official
@@ -129,8 +148,11 @@ def display_figure(hoverData, county_id_select_value):
     if hoverData is not None:
         hover = hoverData["points"][0]["location"]
 
+    div_solutions_county_id = f"County IDs: {solutions_county_id}"
+    div_solutions_camm_id = f"Camm IDs: {solutions_camm_id}"
+
     # print(f"Selected: {hover}")
-    return get_figure(fig, hover)
+    return get_figure(fig, hover), div_solutions_county_id, div_solutions_camm_id
 
 # app.run_server(mode='inline', port=8088, debug=True)
 app.run_server(debug=True, port=8088)
