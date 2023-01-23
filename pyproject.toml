@@ -24,6 +24,7 @@ bokeh = "^3.0.3"
 dash = "^2.7.1"
 jupyter-dash = "^0.4.2"
 streamlit = "^1.17.0"
+pulp = "^2.7.0"
 
 
 [build-system]
