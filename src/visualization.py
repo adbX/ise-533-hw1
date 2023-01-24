@@ -92,17 +92,18 @@ app = dash.Dash(__name__)
 
 app.layout = html.Div(
     [
-        html.P("Source of county_id label:"),
+        html.P("County labelling system to use:"),
         dcc.RadioItems(
             id="county_id_select",
             options=["Official", "Camm18"],
             value="Official",
             inline=True,
         ),
+        html.P("Highlight one of the 3 optimal solutions for Question 1:"),
         dcc.RadioItems(
             id="solution_select",
-            options=["model_1_static", "model_2_population"],
-            value="model_1_static",
+            options=["sol1", "sol2", "sol3"],
+            value="sol1",
             inline=True,
         ),
         html.P(id="solutions_name"),
@@ -129,7 +130,7 @@ app.layout = html.Div(
 )
 def display_figure(hoverData, county_id_select, solution_select):
     # get_solutions(df, solution_name)
-    solution_name = "solution_" + solution_select + ".csv"
+    solution_name = "solution_main_model_" + solution_select + ".csv"
     solutions, solutions_county_id, solutions_camm_id = get_solutions(df, solution_name)
     set_solution_colors(solutions)
 
