@@ -16,11 +16,16 @@ def data_ingest(data_path: Path):
     camm_id = pd.read_csv(data_path / "camm_county_mapping.csv")
 
     counties["county_id"] = pd.Series(range(1, 89))
-
+    
     df_pop = pd.read_csv(data_path / "oh_pop_decennial.csv")
     df_pop.astype({"population_2010": "int"})
     df_pop.astype({"population_2020": "int"})
     df = pd.merge(counties, df_pop, on="county")
+    
+    df_pop_2011 = pd.read_csv(data_path / "chen_ohio_pop_2010_2011.csv")
+    df_pop_2011.astype({"population_2011": "int"})
+    df_pop_2011.drop(columns=["population_2010", "number"], inplace=True)
+    df = pd.merge(df, df_pop_2011, on="county")
 
     df = pd.merge(df, fips_df, on="county")
     df = pd.merge(df, camm_id, on="county_id")
