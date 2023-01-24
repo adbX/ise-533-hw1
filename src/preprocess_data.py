@@ -11,28 +11,31 @@ def county_list_to_names(id_list: list, counties: pd.DataFrame) -> list:
 def data_ingest(data_path: Path):
     fips_df = pd.read_csv(data_path / "oh-fips.csv")
     fips_df.astype({"fips": "int"})
-    
+
     counties = pd.read_csv(data_path / "oh_county_list.csv")
     camm_id = pd.read_csv(data_path / "camm_county_mapping.csv")
-    
+
     counties["county_id"] = pd.Series(range(1, 89))
 
     df_pop = pd.read_csv(data_path / "oh_pop_decennial.csv")
     df_pop.astype({"population_2010": "int"})
     df_pop.astype({"population_2020": "int"})
     df = pd.merge(counties, df_pop, on="county")
-    
+
     df = pd.merge(df, fips_df, on="county")
     df = pd.merge(df, camm_id, on="county_id")
     return df, counties
+
 
 def county_ids_to_camm_ids(df: pd.DataFrame, counties: list) -> list:
     camm_list = df[df["county_id"].isin(counties)]["camm_id"].tolist()
     return sorted(camm_list)
 
+
 def camm_ids_to_county_ids(df: pd.DataFrame, camm_ids: list) -> list:
     county_list = df[df["camm_id"].isin(camm_ids)]["county_id"].tolist()
     return sorted(county_list)
+
 
 def create_adjacent_list(data_path: Path) -> list:
     with open(data_path / "oh_adjacent_loc.dat", "r") as f:
@@ -43,22 +46,24 @@ def create_adjacent_list(data_path: Path) -> list:
 
     return adjacent_list
 
-def gen_adjacent_matrix(df: pd.DataFrame, adjacent_list: list, camm: bool) -> dict:    
+
+def gen_adjacent_matrix(df: pd.DataFrame, adjacent_list: list, camm: bool) -> dict:
     adjacent_matrix = defaultdict(list)
     for i in range(1, 89):
         adjacent_list[i - 1].append(i)
         adjacent_matrix[i] = adjacent_list[i - 1]
-        
-    if camm==True:
+
+    if camm == True:
         camm_matrix = defaultdict(list)
         camm_county_mapping = dict(zip(df.county_id, df.camm_id))
         for key, value in adjacent_matrix.items():
             # print(f"official: {key} -> camm: {camm_county_mapping[key]}")
             # print(f"official: {value} -> camm: {county_ids_to_camm_ids(df, value)}")
             camm_matrix[camm_county_mapping[key]] = county_ids_to_camm_ids(df, value)
-        adjacent_matrix=camm_matrix
+        adjacent_matrix = camm_matrix
 
     return adjacent_matrix
+
 
 def create_df(
     df: pd.DataFrame, counties: pd.DataFrame, adjacent_list: list
@@ -69,6 +74,7 @@ def create_df(
     )
 
     return df
+
 
 def get_df_adj(data_path: Path, camm=False):
     df_init, counties = data_ingest(data_path)
