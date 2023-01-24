@@ -8,7 +8,7 @@ def county_list_to_names(id_list: list, counties: pd.DataFrame) -> list:
     return counties[counties["county_id"].isin(id_list)]["county"].tolist()
 
 
-def data_ingest(data_path: Path, year: int):
+def data_ingest(data_path: Path):
     fips_df = pd.read_csv(data_path / "oh-fips.csv")
     fips_df.astype({"fips": "int"})
     
@@ -17,9 +17,11 @@ def data_ingest(data_path: Path, year: int):
     
     counties["county_id"] = pd.Series(range(1, 89))
 
-    df_pop = pd.read_csv(data_path / f"oh_county_pop_{str(year)}.csv")
-    df_pop.astype({"population": "int"})
+    df_pop = pd.read_csv(data_path / "oh_pop_decennial.csv")
+    df_pop.astype({"population_2010": "int"})
+    df_pop.astype({"population_2020": "int"})
     df = pd.merge(counties, df_pop, on="county")
+    
     df = pd.merge(df, fips_df, on="county")
     df = pd.merge(df, camm_id, on="county_id")
     return df, counties
@@ -68,8 +70,8 @@ def create_df(
 
     return df
 
-def get_df_adj(data_path: Path, year: int, camm=False):
-    df_init, counties = data_ingest(data_path, year)
+def get_df_adj(data_path: Path, camm=False):
+    df_init, counties = data_ingest(data_path)
     adjacent_list = create_adjacent_list(data_path)
     adjacent_matrix = gen_adjacent_matrix(df_init, adjacent_list, camm=camm)
     df = create_df(df_init, counties, adjacent_list)
@@ -78,13 +80,12 @@ def get_df_adj(data_path: Path, year: int, camm=False):
 
 if __name__ == "__main__":
     data_path = Path("data")
-    year = 2021
 
-    df_init, counties = data_ingest(data_path, year)
-    adjacent_list = create_adjacent_list(data_path)
-    adjacent_matrix = gen_adjacent_matrix(df_init, adjacent_list, camm=False)
-    camm_matrix = gen_adjacent_matrix(df_init, adjacent_list, camm=True)
+    df_init, counties = data_ingest(data_path)
+    # adjacent_list = create_adjacent_list(data_path)
+    # adjacent_matrix = gen_adjacent_matrix(df_init, adjacent_list, camm=False)
+    # camm_matrix = gen_adjacent_matrix(df_init, adjacent_list, camm=True)
 
-    # print()
+    print(df_init)
     # print(camm_matrix)
     # print(adjacent_matrix)

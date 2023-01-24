@@ -10,7 +10,7 @@ class pyomo_model:
         self.year = year
         self.adjacent_list = dat.create_adjacent_list(data_path)
         self.adjacent_matrix = dat.gen_adjacent_matrix(self.adjacent_list)
-        self.df_init, self.counties = dat.data_ingest(data_path, year)
+        self.df_init, self.counties = dat.data_ingest(data_path)
         self.df = dat.create_df(self.df_init, self.counties, self.adjacent_list)
         self.model = pyo.AbstractModel()
 
