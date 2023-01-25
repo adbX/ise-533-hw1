@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Adhithya Bhaskar <adhithyabhaskar@gmail.com>"]
 readme = "README.md"
-packages = [{include = "ise_533_hw1"}]
+packages = []
 
 [tool.poetry.dependencies]
 python = "==3.11.0"
