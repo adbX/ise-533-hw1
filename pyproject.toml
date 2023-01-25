@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "ise_533_hw1"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "==3.11.0"
 pyomo = "^6.4.4"
 jupyterlab = "^3.5.2"
 ipykernel = "^6.20.1"
