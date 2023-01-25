@@ -8,7 +8,6 @@ from dash.dependencies import Input, Output
 from dash import html
 from dash import dcc
 import dash_bootstrap_components as dbc
-from dash_bootstrap_templates import load_figure_template
 
 data_path = Path("data/")
 output_path = Path("output/")
@@ -85,51 +84,12 @@ def get_figure(fig, hover):
                 hover_name=highlights.NAME,
                 locations=highlights.index,
                 color_discrete_map=custom_color_map,
-            ).data[0]
-        )
+            ).data[0])
     return fig
 
-app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
+app = dash.Dash(external_stylesheets=[dbc.themes.JOURNAL])
 
 server = app.server
-
-# app.layout = html.Div(
-#     [
-#         html.H1(children='Visualising the Ohio bank optimization problem'),
-#         html.Div("Hover over a county to highlight its neighbours."),
-        
-#         html.Label('Choose a county labelling system to use:'),
-#         dcc.RadioItems(
-#             id="county_id_select",
-#             options=["Official", "Camm18"],
-#             value="Official",
-#             inline=True,
-#         ),
-#         html.Br(),
-        
-#         html.Label("Highlight one of the 3 optimal solutions for Question 1:"),
-#         dcc.RadioItems(
-#             id="solution_select",
-#             options=["sol1", "sol2", "sol3"],
-#             value="sol1",
-#             inline=True,
-#         ),
-#         html.Br(),
-        
-#         html.Div(children=[
-#             html.P(id="solutions_name"),
-#             html.P(id="solutions_county_id"),
-#             html.P(id="solutions_camm_id"),
-#         ]),
-        
-#         dcc.Graph(
-#             id="choropleth",
-#             responsive=True,
-#             style={"width": "95vw", "height": "95vh"},
-#             clear_on_unhover=True,
-#         ),
-#     ], style={'display': 'flex', 'flex-direction': 'column'}
-# )
 
 card_county = dbc.Card([
     dbc.Label("Choose a county labelling system to use:"),
@@ -168,6 +128,7 @@ para_solutions = html.Div([
 
 controls = dbc.Card(
     [
+        html.P("Hover over a county to highlight its neighbours", style={"font-weight": "bold"}),
         dbc.Row(
         [
             dbc.Col(card_county, align="center"),
@@ -183,10 +144,11 @@ controls = dbc.Card(
 app.layout = dbc.Container(
     [
         html.H1("Visualising the Ohio bank optimization problem"),
+        html.H2("By: Adhithya Bhaskar"),
+        html.H4(children=[html.A("GitHub repository", href="https://github.com/adbX/ise-533-hw1", style={"underline": "none"})]),
         html.Hr(),
         dbc.Row(
             [
-                html.P("Hover over a county to highlight its neighbours."),
                 dbc.Row(controls, align="center"),
                 dbc.Row(
                     dcc.Graph(
@@ -225,7 +187,7 @@ def display_figure(hoverData, county_id_select, solution_select):
         locations=geo_df.index,
         labels={"neighbours": "adjacent_id"},
         color_discrete_map=custom_color_map,
-        template="seaborn",
+        # template="seaborn",
     )
 
     if county_id_select == "Camm18":
@@ -239,11 +201,13 @@ def display_figure(hoverData, county_id_select, solution_select):
         ).data[0]
     )
 
-    fig.update_geos(fitbounds="locations", visible=False)
+    fig.update_geos(showcountries=False, showcoastlines=False, fitbounds="locations",
+                    visible=True)
     fig.update_layout(
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        margin={"r": 10, "t": 0, "l": 10, "b": 20, "pad": 0},
         uirevision="constant",
         showlegend=False,
+        coloraxis_showscale=False,
         height=900,
         font_family="Open Sans",
     )
@@ -265,5 +229,5 @@ def display_figure(hoverData, county_id_select, solution_select):
     )
 
 if __name__ == '__main__':
-# app.run_server(mode='inline', port=8088, debug=True)
+    # app.run_server(mode='inline', port=8088, debug=True)
     app.run_server(debug=True)
