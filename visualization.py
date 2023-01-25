@@ -1,7 +1,7 @@
 import plotly.express as px
 import geopandas as gpd
 from pathlib import Path
-import preprocess_data as ppd
+import src.preprocess_data as ppd
 import pandas as pd
 import dash
 from dash.dependencies import Input, Output
