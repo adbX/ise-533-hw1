@@ -7,6 +7,8 @@ import dash
 from dash.dependencies import Input, Output
 from dash import html
 from dash import dcc
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import load_figure_template
 
 data_path = Path("data/")
 output_path = Path("output/")
@@ -87,37 +89,118 @@ def get_figure(fig, hover):
         )
     return fig
 
+app = dash.Dash(external_stylesheets=[dbc.themes.FLATLY])
 
-app = dash.Dash(__name__)
+server = app.server
 
-app.layout = html.Div(
+# app.layout = html.Div(
+#     [
+#         html.H1(children='Visualising the Ohio bank optimization problem'),
+#         html.Div("Hover over a county to highlight its neighbours."),
+        
+#         html.Label('Choose a county labelling system to use:'),
+#         dcc.RadioItems(
+#             id="county_id_select",
+#             options=["Official", "Camm18"],
+#             value="Official",
+#             inline=True,
+#         ),
+#         html.Br(),
+        
+#         html.Label("Highlight one of the 3 optimal solutions for Question 1:"),
+#         dcc.RadioItems(
+#             id="solution_select",
+#             options=["sol1", "sol2", "sol3"],
+#             value="sol1",
+#             inline=True,
+#         ),
+#         html.Br(),
+        
+#         html.Div(children=[
+#             html.P(id="solutions_name"),
+#             html.P(id="solutions_county_id"),
+#             html.P(id="solutions_camm_id"),
+#         ]),
+        
+#         dcc.Graph(
+#             id="choropleth",
+#             responsive=True,
+#             style={"width": "95vw", "height": "95vh"},
+#             clear_on_unhover=True,
+#         ),
+#     ], style={'display': 'flex', 'flex-direction': 'column'}
+# )
+
+card_county = dbc.Card([
+    dbc.Label("Choose a county labelling system to use:"),
+    dbc.RadioItems(
+        options=[
+            {"label": "Government `county_id` numbering", "value": "Official"},
+            {"label": "`county_id` indexing used in Camm18", "value": "Camm18"},
+        ],
+        value="Camm18",
+        id="county_id_select",
+        labelCheckedClassName="text-success",
+        inputCheckedClassName="border border-success bg-success",
+    ),
+], body=True)
+
+card_solution = dbc.Card([
+    dbc.Label("Choose an optimal solution to highlight for Question 1:"),
+    dbc.RadioItems(
+        options=[
+            {"label": "Solution 1", "value": "sol1"},
+            {"label": "Solution 2", "value": "sol2"},
+            {"label": "Solution 3", "value": "sol3"},
+        ],
+        value="sol1",
+        id="solution_select",
+        labelCheckedClassName="text-success",
+        inputCheckedClassName="border border-success bg-success",
+    ),
+], body=True)
+
+para_solutions = html.Div([
+    html.P(id="solutions_name"),
+    html.P(id="solutions_county_id"),
+    html.P(id="solutions_camm_id"),
+])
+
+controls = dbc.Card(
     [
-        html.P("County labelling system to use:"),
-        dcc.RadioItems(
-            id="county_id_select",
-            options=["Official", "Camm18"],
-            value="Official",
-            inline=True,
-        ),
-        html.P("Highlight one of the 3 optimal solutions for Question 1:"),
-        dcc.RadioItems(
-            id="solution_select",
-            options=["sol1", "sol2", "sol3"],
-            value="sol1",
-            inline=True,
-        ),
-        html.P(id="solutions_name"),
-        html.P(id="solutions_county_id"),
-        html.P(id="solutions_camm_id"),
-        dcc.Graph(
-            id="choropleth",
-            responsive=True,
-            style={"width": "95vw", "height": "95vh"},
-            clear_on_unhover=True,
-        ),
-    ]
+        dbc.Row(
+        [
+            dbc.Col(card_county, align="center"),
+            dbc.Col(card_solution, align="center"),
+            para_solutions,
+        ],
+       
+        align="center"),
+    ],
+    body=True
 )
 
+app.layout = dbc.Container(
+    [
+        html.H1("Visualising the Ohio bank optimization problem"),
+        html.Hr(),
+        dbc.Row(
+            [
+                html.P("Hover over a county to highlight its neighbours."),
+                dbc.Row(controls, align="center"),
+                dbc.Row(
+                    dcc.Graph(
+                        id="choropleth",
+                        responsive=True,
+                        style={"width": "100vw", "height": "100vh"},
+                        clear_on_unhover=True,
+                        )),
+            ],
+            align="center",
+        ),
+    ],
+    fluid=True, style={'display': 'flex', 'flex-direction': 'column'}
+)
 
 @app.callback(
     Output("choropleth", "figure"),
@@ -162,7 +245,7 @@ def display_figure(hoverData, county_id_select, solution_select):
         uirevision="constant",
         showlegend=False,
         height=900,
-        title_font_family="Open Sans",
+        font_family="Open Sans",
     )
 
     hover = -1
@@ -181,6 +264,6 @@ def display_figure(hoverData, county_id_select, solution_select):
         div_solutions_name,
     )
 
-
+if __name__ == '__main__':
 # app.run_server(mode='inline', port=8088, debug=True)
-app.run_server(debug=True, port=8088)
+    app.run_server(debug=True, port=8088)

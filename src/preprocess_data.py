@@ -1,6 +1,5 @@
 import pandas as pd
 from pathlib import Path
-import pyomo.environ as pyo
 from collections import defaultdict
 
 
