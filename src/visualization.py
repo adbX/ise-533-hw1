@@ -266,4 +266,4 @@ def display_figure(hoverData, county_id_select, solution_select):
 
 if __name__ == '__main__':
 # app.run_server(mode='inline', port=8088, debug=True)
-    app.run_server(debug=True, port=8088)
+    app.run_server(debug=True)
